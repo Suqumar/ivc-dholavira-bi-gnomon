@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Equinox Gallery - Bi-Gnomon Sundial at Dholavira</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: linear-gradient(to bottom, #0f172a 0%, #1e293b 100%);
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .hover-lift {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .photo-item {
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
+      aspect-ratio: 4/3;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .photo-item:hover img {
+      transform: scale(1.05);
+    }
+
+    .photo-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+      padding: 1rem;
+      color: white;
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .photo-item:hover .photo-caption {
+      opacity: 1;
+    }
+
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      padding: 2rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      position: relative;
+    }
+
+    .lightbox-content img {
+      max-width: 100%;
+      max-height: 85vh;
+      object-fit: contain;
+    }
+
+    .lightbox-caption {
+      color: white;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.5);
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .lightbox-nav:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .lightbox-nav.prev {
+      left: 2rem;
+    }
+
+    .lightbox-nav.next {
+      right: 2rem;
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen">
+
+  <!-- Minimal header -->
+  <header class="sticky top-0 z-30 glass">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+        <div>
+          <div class="font-medium text-sm">Dholavira Bi-Gnomon</div>
+          <div class="text-xs text-slate-400">Companion App</div>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm text-slate-300">
+        <a href="evidence.html" class="hover:text-white transition">Evidence</a>
+        <a href="methods.html" class="hover:text-white transition">Methods</a>
+        <a href="context.html" class="hover:text-white transition">Context</a>
+        <a href="resources.html" class="hover:text-white transition">Resources</a>
+      </nav>
+
+      <button id="menuToggle" class="md:hidden p-2 text-slate-300 hover:text-white">
+        <svg id="iconOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="iconClose" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <nav id="mobileNav" class="md:hidden max-h-0 overflow-hidden transition-all duration-200">
+      <div class="px-6 pb-4 flex flex-col gap-3 text-sm text-slate-300">
+        <a href="evidence.html" class="hover:text-white">Evidence</a>
+        <a href="methods.html" class="hover:text-white">Methods</a>
+        <a href="context.html" class="hover:text-white">Context</a>
+        <a href="resources.html" class="hover:text-white">Resources</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-16">
+
+    <div class="text-center mb-12">
+      <h1 class="text-3xl font-light mb-3">Equinox Observations</h1>
+      <p class="text-slate-400">Shadow photography from equinox days at Dholavira</p>
+      <p class="text-sm text-slate-500 mt-2">Click any image to view full size</p>
+    </div>
+
+    <div id="photoGallery" class="photo-grid">
+      <!-- Photos will be dynamically loaded here -->
+    </div>
+
+    <div id="emptyState" class="text-center py-16 glass rounded-2xl">
+      <svg class="w-16 h-16 mx-auto mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <h3 class="text-xl font-medium mb-2 text-slate-300">No photos yet</h3>
+      <p class="text-slate-400 mb-4">Upload your equinox photos to the <code class="bg-slate-800 px-2 py-1 rounded">images/equinox</code> directory</p>
+      <p class="text-sm text-slate-500">Supported formats: JPG, PNG, WEBP</p>
+    </div>
+
+  </main>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <div class="lightbox-close" onclick="closeLightbox()">&times;</div>
+    <div class="lightbox-nav prev" onclick="navigatePhoto(-1)">‹</div>
+    <div class="lightbox-nav next" onclick="navigatePhoto(1)">›</div>
+    <div class="lightbox-content">
+      <img id="lightboxImg" src="" alt="">
+      <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="glass border-t border-white/5 mt-16">
+    <div class="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-slate-400">
+      <p>&copy; <span id="year"></span> Dholavira Bi-Gnomon Sundial Project</p>
+      <a href="evidence.html" class="hover:text-white transition">← Back to Evidence</a>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Mobile nav
+    const menuToggle = document.getElementById("menuToggle");
+    const mobileNav = document.getElementById("mobileNav");
+    const iconOpen = document.getElementById("iconOpen");
+    const iconClose = document.getElementById("iconClose");
+    let menuOpen = false;
+
+    menuToggle.addEventListener("click", () => {
+      menuOpen = !menuOpen;
+      if (menuOpen) {
+        mobileNav.style.maxHeight = "200px";
+        iconOpen.classList.add("hidden");
+        iconClose.classList.remove("hidden");
+      } else {
+        mobileNav.style.maxHeight = "0px";
+        iconOpen.classList.remove("hidden");
+        iconClose.classList.add("hidden");
+      }
+    });
+
+    // Photo gallery
+    const photos = [
+      // Add your photos here in this format:
+      // { src: 'images/equinox/photo1.jpg', caption: 'Spring Equinox - 06:00 AM' },
+      // { src: 'images/equinox/photo2.jpg', caption: 'Spring Equinox - 06:15 AM' },
+    ];
+
+    let currentPhotoIndex = 0;
+
+    function loadGallery() {
+      const gallery = document.getElementById('photoGallery');
+      const emptyState = document.getElementById('emptyState');
+
+      if (photos.length === 0) {
+        gallery.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      gallery.style.display = 'grid';
+      emptyState.style.display = 'none';
+
+      photos.forEach((photo, index) => {
+        const item = document.createElement('div');
+        item.className = 'photo-item hover-lift';
+        item.onclick = () => openLightbox(index);
+        item.innerHTML = `
+          <img src="${photo.src}" alt="${photo.caption}" loading="lazy">
+          <div class="photo-caption">${photo.caption}</div>
+        `;
+        gallery.appendChild(item);
+      });
+    }
+
+    function openLightbox(index) {
+      currentPhotoIndex = index;
+      const lightbox = document.getElementById('lightbox');
+      const img = document.getElementById('lightboxImg');
+      const caption = document.getElementById('lightboxCaption');
+
+      img.src = photos[index].src;
+      caption.textContent = photos[index].caption;
+      lightbox.classList.add('active');
+
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      const lightbox = document.getElementById('lightbox');
+      lightbox.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    function navigatePhoto(direction) {
+      currentPhotoIndex += direction;
+      if (currentPhotoIndex < 0) currentPhotoIndex = photos.length - 1;
+      if (currentPhotoIndex >= photos.length) currentPhotoIndex = 0;
+
+      const img = document.getElementById('lightboxImg');
+      const caption = document.getElementById('lightboxCaption');
+      img.src = photos[currentPhotoIndex].src;
+      caption.textContent = photos[currentPhotoIndex].caption;
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      const lightbox = document.getElementById('lightbox');
+      if (!lightbox.classList.contains('active')) return;
+
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') navigatePhoto(-1);
+      if (e.key === 'ArrowRight') navigatePhoto(1);
+    });
+
+    // Close lightbox on background click
+    document.getElementById('lightbox').addEventListener('click', (e) => {
+      if (e.target.id === 'lightbox') closeLightbox();
+    });
+
+    // Load gallery on page load
+    loadGallery();
+  </script>
+</body>
+</html>
